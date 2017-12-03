@@ -1,5 +1,11 @@
 node 'pi.eastcode.sys' {
 
+  network::interface { 'eth0':
+    ipaddress => '192.168.2.4',
+    netmask   => '255.255.0.0',
+    gateway   => '192.168.0.1'
+  }
+
   include dns::server
 
   dns::server::options { '/etc/bind/named.conf.options':
