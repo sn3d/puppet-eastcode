@@ -1,4 +1,4 @@
-node 'pi.eastcode.sys' {
+node 'puppet.eastcode.sys' {
 
   network::interface { 'eth0':
     ipaddress => '192.168.2.4',
@@ -49,18 +49,16 @@ node 'pi.eastcode.sys' {
     data => 'agent1.eastcode.sys'
   }
 
-  $dhcpd_netmask             = '255.255.0.0'
-  $dhcpd_subnet              = '192.168.0.0'
-  $dhcpd_routers             = '192.168.0.1'
-  $dhcpd_domain_name_servers = '192.168.2.4,192.168.0.1'
-  $dhcpd_range_start         = '1'
-  $dhcpd_range_end           = '254'
-  $dhcpd_default_lease_time  = '3600'
-  $dhcpd_max_lease_time      = '21600'
+  class { 'dhcp':
+    interfaces   => ['eth0']
+  }
 
-  class { '::dhcpd':
-    configcontent => template('dhcpd/dhcpd.conf-simple.erb'),
-    ensure        => 'running',
+  dhcp::pool{ 'dc1.eastcode.sys':
+    network     => '192.168.2.0',
+    mask        => '255.255.0.0',
+    range       => '192.168.2.10 192.168.2.200',
+    gateway     => '192.168.2.1',
+    nameservers => ['192.168.2.1', '192.168.0.1']
   }
 
 }
