@@ -6,6 +6,12 @@ node 'puppet.eastcode.sys' {
     gateway   => '192.168.0.1'
   }
 
+  network::route { 'enp0s3':
+    ipaddress => [ '192.168.2.0', ],
+    netmask   => [ '255.255.255.0', ],
+    gateway   => [ '192.168.0.1', ],
+  }
+
   include dns::server
 
   dns::server::options { '/etc/named/named.conf.options':
