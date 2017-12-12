@@ -1,20 +1,12 @@
-node 'puppet.eastcode.sys' {
+node 'pi.eastcode.sys' {
 
-  network::interface { 'enp0s3':
-    ipaddress => '192.168.2.1',
-    netmask   => '255.255.0.0',
-    gateway   => '192.168.0.1'
-  }
-
-  network::route { 'enp0s3':
-    ipaddress => [ '192.168.2.0', ],
-    netmask   => [ '255.255.255.0', ],
-    gateway   => [ '192.168.0.1', ],
-  }
+  ##############################################################################
+  # DNS
+  ##############################################################################
 
   include dns::server
 
-  dns::server::options { '/etc/named/named.conf.options':
+  dns::server::options { '/etc/bind/named.conf.options':
     forwarders => [ '8.8.8.8', '8.8.4.4' ]
   }
 
@@ -24,38 +16,50 @@ node 'puppet.eastcode.sys' {
     nameservers => ['ns1']
   }
 
-  dns::zone { '2.168.192.IN-ADDR.ARPA':
-    soa         => 'ns1.eastcode.sys',
-    soa_email   => 'admin.eastcode.sys',
-    nameservers => ['ns1']
+  dns::record::a { 'pi':
+    zone => 'eastcode.sys',
+    data => ['192.168.1.1']
   }
 
-  dns::record::a {
-    'puppet': zone => 'eastcode.sys', data => ['192.168.2.1'];
-    'agent1': zone => 'eastcode.sys', data => ['192.168.2.2'];
-    'agent2': zone => 'eastcode.sys', data => ['192.168.2.3'];
-    'pi':     zone => 'eastcode.sys', data => ['192.168.2.4'];
+  dns::record::a { 'puppet':
+    zone => 'eastcode.sys',
+    data => ['192.168.1.10']
   }
 
-  dns::record::cname {
-    'www': zone => 'eastcode.sys', data => 'agent1.eastcode.sys';
+  dns::record::a { 'agent1':
+    zone => 'eastcode.sys',
+    data => ['192.168.1.11']
   }
 
+  dns::record::a { 'agent2':
+    zone => 'eastcode.sys',
+    data => ['192.168.1.12']
+  }
+
+  dns::record::cname { 'www':
+    zone => 'eastcode.sys',
+    data => 'agent1.eastcode.sys',
+  }
+
+  ##############################################################################
+  # DHCP
+  ############################################################################
   class { 'dhcp':
-    interfaces   => ['enp0s3']
+    interfaces   => ['eth0'],
+    dnsdomain => ["eastcode.sys"]
   }
 
-  dhcp::pool{ 'dc1.eastcode.sys':
-    network     => '192.168.2.0',
+  dhcp::pool {  'eastcode.sys':
+    network     => '192.168.1.0',
     mask        => '255.255.255.0',
-    range       => '192.168.2.10 192.168.2.200',
-    gateway     => '192.168.2.1',
-    nameservers => ['192.168.2.1', '192.168.0.1']
+    range       => '192.168.1.50 192.168.1.200',
+    gateway     => '192.168.1.1',
+    nameservers => ['192.168.1.1', '8.8.8.8']
   }
 
   dhcp::host {
-    'agent1': mac => "08:00:27:6B:02:02", ip => "192.168.2.2";
-    'agent2': mac => "08:00:27:6B:02:03", ip => "192.168.2.3";
+    'puppet': mac => "08:00:27:6B:02:01", ip => "192.168.1.10";
+    'agent1': mac => "08:00:27:6B:02:02", ip => "192.168.1.11";
+    'agent2': mac => "08:00:27:6B:02:03", ip => "192.168.1.12";
   }
-
 }
