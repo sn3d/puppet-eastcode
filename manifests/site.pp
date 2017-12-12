@@ -14,7 +14,6 @@ node 'puppet.eastcode.sys'  {
     archive_version => '3.4.11',
     service_provider => 'systemd',
     manage_service_file => true
-
   }
 }
 
@@ -64,4 +63,12 @@ node 'agent2.eastcode.sys' {
     version => '0.11.0.2',
     scala_version => '2.12'
   }
+
+  class { 'kafka::broker':
+    config => {
+      'broker.id' => '1',
+      'zookeeper.connect' => '192.168.1.10:2181'
+    }
+  }
+
 }
